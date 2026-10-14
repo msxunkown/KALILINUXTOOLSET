@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KALI LINUX TOOLS | Zero-Day Exploit</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* Genel Sıfırlama ve Font */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Share Tech Mono', monospace; /* Matrix fontu */
+    }
+
+    /* Renk Paleti ve Arka Plan */
+    :root {
+      --matrix-green: rgb(17, 255, 0);
+      --matrix-dark-green: rgb(170, 0, 0);
+      --matrix-darkest-green: #020e02;
+      --matrix-background: linear-gradient(135deg, #041504, #072d07);
+      --matrix-accent: #072d07;
+      --input-bg-dark: rgba(0, 20, 0, 0.7);
+      --input-border-dark: rgb(170, 0, 43);
+      --shadow-green: rgba(0, 255, 72, 0);
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: var(--matrix-background);
+      padding: 20px;
+      color: var(--matrix-green); 
+      overflow: hidden; /* Matrix yağmuru için */
+      position: relative;
+    }
+
+    /* Matrix Yağmuru Efekti için Container */
+    .matrix-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0; /* İçeriğin arkasında kalması için */
+      overflow: hidden;
+      background: linear-gradient(to bottom, rgba(0, 20, 0, 0.05), rgba(0, 10, 0, 0.1)); /* Hafif bir gradyan */
+    }
+
+    .code-column {
+      position: absolute;
+      top: -100px; /* Başlangıç dışarıda */
+      font-size: 12px;
+      color: var(--matrix-green);
+      text-shadow: 0 0 5px var(--matrix-green);
+      white-space: nowrap;
+      opacity: 0.7;
+      animation: codeRain linear infinite;
+    }
+
+    @keyframes codeRain {
+      0% { transform: translateY(-100px); }
+      100% { transform: translateY(calc(100vh + 100px)); } /* Tüm ekranı kaplasın */
+    }
+
+    /* Ana Kimlik Doğrulama Konteyneri */
+    .auth-container {
+      display: flex;
+      width: 900px; /* Biraz daha geniş */
+      min-height: 550px; /* Daha fazla alan */
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 40px var(--shadow-green);
+      border: 1px solid var(--matrix-dark-green);
+      position: relative; /* Z-index için */
+      z-index: 1; /* Matrix yağmurunun üzerinde olması için */
+      background: rgba(2, 14, 2, 0.9); /* Yarı şeffaf koyu arka plan */
+    }
+
+    /* Ayı Yanı (Sol Taraf) */
+    .bear-side {
+      flex: 1;
+      background: linear-gradient(135deg, var(--matrix-accent), var(--matrix-darkest-green));
+      position: relative;
+      display: flex;
+      flex-direction: column; /* Dikey hizalama için */
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      border-right: 1px solid var(--matrix-dark-green);
+    }
+
+    .bear-side .logo-matrix {
+      position: absolute;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 2;
+    }
+
+    .bear-side .logo-matrix h1 {
+      color: var(--matrix-green);
+      font-size: 38px;
+      letter-spacing: 3px;
+      font-weight: bold;
+      text-shadow: 0 0 8px var(--matrix-green), 0 0 15px var(--matrix-green);
+      margin-bottom: 5px;
+    }
+
+    .bear-side .logo-matrix p {
+      color: var(--matrix-dark-green);
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    .welcome-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      bottom: 40px;
+      color: var(--matrix-green);
+      font-size: 24px;
+      font-weight: 700;
+      opacity: 0.9;
+      text-shadow: 0 0 5px var(--matrix-green);
+      transition: all 0.6s ease;
+      z-index: 2;
+    }
+
+    /* Ayı Karakteri Stil Ayarları (Matrix Temasına Uygun) */
+    .bear-container {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      animation: float 3s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    .bear-face {
+      background-color: var(--matrix-darkest-green); /* Koyu yeşil */
+      border: 2px solid var(--matrix-dark-green);
+    }
+
+    .ear-l, .ear-r {
+      background-color: var(--matrix-darkest-green);
+      border: 2px solid var(--matrix-dark-green);
+    }
+
+    .ear-l:before, .ear-r:before {
+      background-color: rgba(0, 255, 0, 0.1); /* Hafif yeşil iç kısım */
+    }
+
+    .eye-l, .eye-r {
+      background-color: rgba(0, 255, 0, 0.2); /* Yarı şeffaf yeşil göz beyazı */
+      border: 1px solid var(--matrix-green);
+    }
+
+    .eyeball-l, .eyeball-r {
+      background-color: var(--matrix-green); /* Parlak yeşil gözbebekleri */
+    }
+
+    .blush-l, .blush-r {
+      background-color: rgba(0, 255, 0, 0.1); /* Hafif yeşil allık */
+    }
+
+    .snout {
+      background-color: var(--matrix-dark-green); /* Koyu yeşil burun */
+      border: 1px solid var(--matrix-green);
+    }
+
+    .nose {
+      background-color: var(--matrix-green); /* Parlak yeşil burun */
+    }
+
+    .mouth {
+      border-bottom: 3px solid var(--matrix-green); /* Yeşil ağız çizgisi */
+    }
+
+
+    /* Form Yanı (Sağ Taraf) */
+    .form-side {
+      flex: 1.2;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.8); /* Matrix siyahı */
+      color: var(--matrix-green);
+    }
+
+    .auth-title {
+      font-size: 28px; /* Daha küçük başlık */
+      color: var(--matrix-green);
+      margin-bottom: 25px;
+      font-weight: bold;
+      text-align: center;
+      letter-spacing: 2px;
+      text-shadow: 0 0 5px var(--matrix-green);
+    }
+
+    /* Input Alanları */
+    .input-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--matrix-dark-green);
+      font-size: 14px;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px 15px 12px 40px;
+      border: 1px solid var(--input-border-dark);
+      border-radius: 8px;
+      outline: none;
+      font-size: 16px;
+      transition: all 0.3s;
+      background-color: var(--input-bg-dark);
+      color: var(--matrix-green);
+      text-shadow: 0 0 2px var(--matrix-green);
+    }
+
+    .input-group input::placeholder {
+      color: rgba(0, 255, 0, 0.4);
+    }
+
+    .input-group input:focus {
+      border-color: var(--matrix-green);
+      box-shadow: 0 0 0 3px var(--shadow-green);
+      background-color: rgba(0, 30, 0, 0.8);
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--matrix-dark-green);
+      transition: all 0.3s ease;
+    }
+
+    .input-group input:focus + i {
+      color: var(--matrix-green);
+      text-shadow: 0 0 5px var(--matrix-green);
+    }
+
+    .toggle-password { /* Sağ tarafta şifre ikonları */
+      right: 15px;
+      left: auto;
+      cursor: pointer;
+    }
+
+    /* Seçenekler (Beni Hatırla, Şifremi Unuttum) */
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      color: var(--matrix-dark-green);
+    }
+
+    .remember-me input {
+      margin-right: 8px;
+      accent-color: var(--matrix-green);
+      width: 16px;
+      height: 16px;
+    }
+
+    .forgot-password {
+      color: var(--matrix-green);
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      text-shadow: 0 0 2px var(--matrix-green);
+    }
+
+    .forgot-password:hover {
+      text-decoration: underline;
+      text-shadow: 0 0 8px var(--matrix-green);
+    }
+
+    /* Butonlar */
+    .submit-button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      background: var(--matrix-dark-green);
+      color: #000; /* Buton içi yazı rengi */
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+      border: 1px solid var(--matrix-green);
+    }
+
+    .submit-button:hover {
+      background: var(--matrix-green);
+      color: var(--matrix-darkest-green); /* Hoverda yazı rengi değişimi */
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0, 255, 0, 0.4);
+      text-shadow: none;
+    }
+
+    .submit-button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px rgba(0, 255, 0, 0.3);
+    }
+
+    /* Form Geçiş Linki */
+    .toggle-link {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: var(--matrix-dark-green);
+    }
+
+    .toggle-link a {
+      color: var(--matrix-green);
+      text-decoration: none;
+      font-weight: bold;
+      text-shadow: 0 0 2px var(--matrix-green);
+    }
+
+    .toggle-link a:hover {
+      text-decoration: underline;
+      text-shadow: 0 0 8px var(--matrix-green);
+    }
+
+    /* Form Gizleme/Gösterimi */
+    .form-container-inner { /* İçteki formları tutan div */
+        position: relative;
+        height: 100%; /* Parent'ı kadar yüksek olsun */
+        padding-top: 20px; /* Başlıklar için boşluk */
+    }
+
+    .login-form, .register-form {
+        position: absolute;
+        width: 100%;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease, transform 0.4s ease;
+        transform: translateX(20px);
+        top: 0; /* İç konteynerin üstüne hizala */
+        left: 0;
+    }
+
+    .login-form.active, .register-form.active {
+        opacity: 1;
+        pointer-events: all;
+        position: static; /* Aktif olduğunda akışa geri dön */
+        transform: translateX(0);
+    }
+
+    /* Sosyal Medya Butonları */
+    .alternative-login {
+      text-align: center;
+      width: 100%;
+    }
+
+    .alternative-login p {
+      color: var(--matrix-dark-green);
+      margin: 15px 0;
+      position: relative;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .alternative-login p::before,
+    .alternative-login p::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 30%;
+      height: 1px;
+      background-color: var(--matrix-darkest-green);
+    }
+
+    .alternative-login p::before { left: 0; }
+    .alternative-login p::after { right: 0; }
+
+    .social-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 15px;
+      margin-bottom: 10px; /* Alttan boşluk */
+    }
+
+    .social-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 45px; /* Daha büyük */
+      height: 45px;
+      border-radius: 50%;
+      background: rgba(0, 20, 0, 0.5); /* Hafif şeffaf */
+      transition: 0.3s;
+      cursor: pointer;
+      color: var(--matrix-green);
+      border: 1px solid var(--matrix-dark-green);
+      box-shadow: 0 0 8px rgba(0, 255, 0, 0.1);
+      font-size: 18px;
+    }
+
+    .social-button:hover {
+      background: var(--matrix-dark-green);
+      transform: translateY(-2px);
+      box-shadow: 0 0 15px var(--shadow-green);
+      color: var(--matrix-green);
+    }
+
+    /* Şifre Gücü Göstergesi */
+    .password-strength {
+      height: 6px;
+      margin-top: 10px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      background-color: rgba(0, 255, 0, 0.1); /* Hafif yeşil */
+    }
+    .strength-weak { background-color: #ff4d4d; width: 30%; } /* Kırmızı */
+    .strength-medium { background-color: #ffa700; width: 60%; } /* Turuncu */
+    .strength-strong { background-color: #2ecc71; width: 100%; } /* Parlak yeşil */
+
+    .password-text {
+      font-size: 13px;
+      margin-top: 8px;
+      color: var(--matrix-dark-green);
+      font-weight: 500;
+    }
+
+    /* Responsive Tasarım */
+    @media (max-width: 900px) {
+      .auth-container {
+        flex-direction: column;
+        width: 95%;
+        min-height: auto;
+      }
+      .bear-side {
+        height: 250px;
+        border-bottom: 1px solid var(--matrix-dark-green);
+        border-right: none;
+      }
+      .bear-container {
+        transform: scale(0.8) translateY(-10px);
+      }
+      .welcome-text {
+        font-size: 20px;
+        bottom: 20px;
+      }
+      .bear-side .logo-matrix {
+        top: 20px;
+      }
+      .form-side {
+        padding: 30px 20px;
+      }
+      .auth-title {
+        font-size: 24px;
+      }
+    }
+    @media (max-width: 500px) {
+        .form-side {
+            padding: 20px 15px;
+        }
+        .auth-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+        .social-button {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+    }
+
+    /* Animasyonlar (Önceki koddan) */
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    .submit-button:hover {
+      animation: pulse 1s infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="matrix-overlay" id="matrix-overlay"></div>
+
+  <div class="auth-container">
+    <div class="bear-side">
+      <div class="logo-matrix">
+        <h1>KALI LINUX</h1>
+        <p>Advanced Persistent Thread</p>
+      </div>
+      <div class="bear-container">
+        <div class="bear-face">
+          <div class="ear-l"></div>
+          <div class="ear-r"></div>
+          <div class="eye-l">
+            <div class="eyeball-l"></div>
+          </div>
+          <div class="eye-r">
+            <div class="eyeball-r"></div>
+          </div>
+          <div class="blush-l"></div>
+          <div class="blush-r"></div>
+          <div class="snout">
+            <div class="nose"></div>
+            <div class="mouth"></div>
+          </div>
+        </div>
+      </div>
+      <div class="welcome-text" id="welcome-message">DDoS</div>
+    </div>
+
+    <div class="form-side">
+        <div class="form-container-inner">
+            <div class="login-form active" id="login-form-container">
+                <h1 class="auth-title">REMOTE ACCES TROJAN</h1>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="login-email">https://www.pegadaian.co.id : REZKY AWALIA PUTRI ACHMADY</label>
+                        <input type="text" id="login-email" placeholder="View full data" required />
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="input-group">customer : Rp2**.**0.000 **** *** *8
+                        <label for="login-password">Complete Address</label>
+                        <input type="password" id="login-password" placeholder="*ln.*********' />
+                        <i class="fas fa-eye-slash toggle-password"></i>
+                    </div>
+                    <div class="options">
+                        <div class="remember-me">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">SQL Injection</label>
+                        </div>
+                        <a href="#" class="forgot-password">Enpoint 8ht756</a>
+                    </div>
+                    <button type="submit" class="submit-button">Clickjacking</button>
+
+                    <div class="alternative-login">
+                        <p>****KALI TOOLS</p>
+                        <div class="social-buttons">
+                            <div class="social-button" id="fingerprint-login-btn" title="Parmak İzi ile Giriş">
+                                <i class="fas fa-fingerprint"></i>
+                            </div>
+                            <div class="social-button" title="Google ile Giriş Yap">
+                                <i class="fab fa-google"></i>
+                            </div> 
+                            <div class="social-button" title="Facebook ile Giriş Yap">
+                                <i class="fab fa-facebook-f"></i>
+                            </div>
+                            <div class="social-button" title="Apple ile Giriş Yap">
+                                <i class="fab fa-apple"></i>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="toggle-link">
+                    Looking up someone's details at the office <a id="show-register"> only users can make change</a>
+                </div>
+            </div>
+
+            <div class="register-form" id="register-form-container">
+                <h1 class="auth-title">Yeni Protokol Başlat</h1>
+                <form id="register-form">
+                    <div class="input-group">
+                        <label for="register-fullname">Tam Ad</label>
+                        <input type="text" id="register-fullname" placeholder="Adınızı ve soyadınızı girin" required />
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="input-group">
+                        <label for="register-email">E-posta Adresi</label>
+                        <input type="email" id="register-email" placeholder="Geçerli bir e-posta girin" required />
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="input-group">
+                        <label for="register-password">Şifre</label>
+                        <input type="password" id="register-password" placeholder="Güçlü bir şifre protokolü oluşturun" required />
+                        <i class="fas fa-eye-slash toggle-password"></i>
+                        <div class="password-strength" id="password-strength"></div>
+                        <div class="password-text" id="password-text">Şifre Gücü: Henüz girilmedi</div>
+                    </div>
+                    <button type="submit" class="submit-button">Profil Oluştur</button>
+
+                    <div class="alternative-login">
+                        <p>Veya Alternatif Kayıt</p>
+                        <div class="social-buttons">
+                            <div class="social-button" title="Google ile Kayıt Ol">
+                                <i class="fab fa-google"></i>
+                            </div>
+                            <div class="social-button" title="Facebook ile Kayıt Ol">
+                                <i class="fab fa-facebook-f"></i>
+                            </div>
+                            <div class="social-button" title="Twitter ile Kayıt Ol">
+                                <i class="fab fa-twitter"></i>
+                            </div>
+                            <div class="social-button" title="Apple ile Kayıt Ol">
+                                <i class="fab fa-apple"></i>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div class="toggle-link">
+                    Zaten bir profiliniz var mı? <a id="show-login">Giriş Yap</a>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const loginFormContainer = document.getElementById("login-form-container");
+      const registerFormContainer = document.getElementById("register-form-container");
+      const showRegisterLink = document.getElementById("show-register");
+      const showLoginLink = document.getElementById("show-login");
+      const welcomeMessage = document.getElementById("welcome-message");
+      const bearFace = document.querySelector(".bear-face");
+      const mouth = document.querySelector(".mouth");
+      const matrixOverlay = document.getElementById('matrix-overlay');
+      const fingerprintLoginBtn = document.getElementById('fingerprint-login-btn');
+
+
+      // Form değiştirme fonksiyonu
+      function switchForm(targetForm) {
+        if (targetForm === 'register') {
+          loginFormContainer.classList.remove("active");
+          loginFormContainer.classList.add("hidden"); // Gizleme sınıfını ekle
+          registerFormContainer.classList.add("active");
+          registerFormContainer.classList.remove("hidden"); // Gizleme sınıfını kaldır
+          welcomeMessage.textContent = "Yeni Profil Oluştur";
+          bearFace.style.transform = "translateY(-5px) rotate(5deg)";
+          setTimeout(() => {
+            bearFace.style.transform = "translateY(0) rotate(0deg)";
+          }, 600);
+        } else { // targetForm === 'login'
+          registerFormContainer.classList.remove("active");
+          registerFormContainer.classList.add("hidden"); // Gizleme sınıfını ekle
+          loginFormContainer.classList.add("active");
+          loginFormContainer.classList.remove("hidden"); // Gizleme sınıfını kaldır
+          welcomeMessage.textContent = "Sisteme Giriş Yap";
+          bearFace.style.transform = "translateY(-5px) rotate(-5deg)";
+          setTimeout(() => {
+            bearFace.style.transform = "translateY(0) rotate(0deg)";
+          }, 600);
+        }
+      }
+
+      showRegisterLink.addEventListener("click", function(e) {
+        e.preventDefault();
+        switchForm('register');
+      });
+
+      showLoginLink.addEventListener("click", function(e) {
+        e.preventDefault();
+        switchForm('login');
+      });
+
+      // Göz hareketlerini izleme
+      const authContainer = document.querySelector(".auth-container");
+      const eyeballL = document.querySelector(".eyeball-l");
+      const eyeballR = document.querySelector(".eyeball-r");
+
+      document.addEventListener("mousemove", (e) => {
+        const x = e.clientX;
+        const y = e.clientY;
+
+        const rect = authContainer.getBoundingClientRect();
+        const bearCenterX = rect.left + rect.width / 3;
+        const bearCenterY = rect.top + rect.height / 2;
+
+        const maxMove = 6;
+
+        const deltaX = x - bearCenterX;
+        const deltaY = y - bearCenterY;
+
+        const moveX = Math.max(-1, Math.min(1, deltaX / 150)) * maxMove;
+        const moveY = Math.max(-1, Math.min(1, deltaY / 150)) * maxMove;
+
+        eyeballL.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        eyeballR.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      });
+
+      // Şifre görünürlük kontrolü
+      const togglePasswordButtons = document.querySelectorAll(".toggle-password");
+      togglePasswordButtons.forEach(button => {
+        button.addEventListener("click", function() {
+          const passwordField = this.previousElementSibling;
+          if (passwordField.type === "password") {
+            passwordField.type = "text";
+            this.classList.remove("fa-eye-slash");
+            this.classList.add("fa-eye");
+          } else {
+            passwordField.type = "password";
+            this.classList.remove("fa-eye");
+            this.classList.add("fa-eye-slash");
+          }
+        });
+      });
+
+      // Şifre gücü kontrolü
+      const registerPassword = document.getElementById("register-password");
+      const passwordStrength = document.getElementById("password-strength");
+      const passwordText = document.getElementById("password-text");
+
+      if (registerPassword) {
+        registerPassword.addEventListener("input", function() {
+          const password = this.value;
+          let strength = 0;
+          if (password.length > 7) strength += 1;
+          if (password.match(/[A-Z]/)) strength += 1;
+          if (password.match(/[0-9]/)) strength += 1;
+          if (password.match(/[^A-Za-z0-9]/)) strength += 1;
+
+          passwordStrength.className = "password-strength";
+
+          if (password.length === 0) {
+            passwordStrength.style.width = "0";
+            passwordText.textContent = "Şifre Gücü: Henüz girilmedi";
+          } else if (strength < 2) {
+            passwordStrength.classList.add("strength-weak");
+            passwordText.textContent = "Şifre Gücü: Zayıf";
+          } else if (strength < 4) {
+            passwordStrength.classList.add("strength-medium");
+            passwordText.textContent = "Şifre Gücü: Orta";
+          } else {
+            passwordStrength.classList.add("strength-strong");
+            passwordText.textContent = "Şifre Gücü: Güçlü";
+          }
+        });
+      }
+
+      // Form gönderim olayları (simülasyon)
+      const loginSubmitForm = document.getElementById("login-form");
+      loginSubmitForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+        const submitButton = loginSubmitForm.querySelector('.submit-button');
+        const originalButtonText = submitButton.textContent;
+
+        submitButton.textContent = 'Veri Akışı Başlatılıyor...';
+        submitButton.disabled = true;
+
+        if (email && password) {
+          // Giriş başarılı animasyonu: Ayı gülümsesin
+          bearFace.style.transition = "transform 0.5s ease";
+          bearFace.style.transform = "translateY(10px)";
+          mouth.style.transition = "all 0.5s ease";
+          mouth.style.height = "15px";
+          mouth.style.borderRadius = "50% 50% 0 0";
+          mouth.style.borderBottom = "none";
+          mouth.style.borderTop = "3px solid var(--matrix-green)"; // Matrix yeşili ağız
+
+          setTimeout(() => {
+            alert("Erişim Sağlandı! Matrix'e Hoş Geldiniz...");
+            submitButton.textContent = 'Erişim Başarılı!';
+            setTimeout(() => {
+                submitButton.textContent = originalButtonText;
+                submitButton.disabled = false;
+                bearFace.style.transform = "translateY(0)";
+                mouth.style.height = "10px";
+                mouth.style.borderRadius = "50%";
+                mouth.style.borderTop = "none";
+                mouth.style.borderBottom = "3px solid var(--matrix-green)"; // Matrix yeşili ağız
+            }, 1000);
+          }, 1500);
+        } else {
+          // Hata animasyonu: Ayı sallasın
+          const shakeDuration = 100;
+          bearFace.style.transition = "transform 0.1s ease";
+          bearFace.style.transform = "translateX(-5px)";
+          setTimeout(() => {
+            bearFace.style.transform = "translateX(5px)";
+            setTimeout(() => {
+              bearFace.style.transform = "translateX(-5px)";
+              setTimeout(() => {
+                bearFace.style.transform = "translateX(5px)";
+                setTimeout(() => {
+                  bearFace.style.transform = "translateX(0)";
+                  alert("Hata: Kimlik Bilgileri Eksik!");
+                  submitButton.textContent = originalButtonText;
+                  submitButton.disabled = false;
+                }, shakeDuration);
+              }, shakeDuration);
+            }, shakeDuration);
+          }, shakeDuration);
+        }
+      });
+
+      const registerSubmitForm = document.getElementById("register-form");
+      registerSubmitForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fullname = document.getElementById("register-fullname").value;
+        const email = document.getElementById("register-email").value;
+        const password = document.getElementById("register-password").value;
+        const submitButton = registerSubmitForm.querySelector('.submit-button');
+        const originalButtonText = submitButton.textContent;
+
+        submitButton.textContent = 'Profil Oluşturuluyor...';
+        submitButton.disabled = true;
+
+        if (fullname && email && password) {
+          // Başarılı kayıt animasyonu: Ayı şaşırsın ve sonra mutlu olsun
+          mouth.style.height = "15px";
+          mouth.style.width = "18px";
+          mouth.style.borderBottom = "3px solid var(--matrix-green)";
+          bearFace.style.transform = "translateY(-8px)";
+
+          setTimeout(() => {
+            // Mutlu ifade
+            mouth.style.height = "15px";
+            mouth.style.borderRadius = "50% 50% 0 0";
+            mouth.style.borderBottom = "none";
+            mouth.style.borderTop = "3px solid var(--matrix-green)";
+
+            setTimeout(() => {
+              alert("Yeni Profil Başarıyla Oluşturuldu! Giriş Ekranına Yönlendiriliyorsunuz...");
+              submitButton.textContent = 'Profil Oluşturuldu!';
+              setTimeout(() => {
+                  submitButton.textContent = originalButtonText;
+                  submitButton.disabled = false;
+                  switchForm('login');
+                  mouth.style.height = "10px";
+                  mouth.style.width = "16px";
+                  mouth.style.borderRadius = "50%";
+                  mouth.style.borderTop = "none";
+                  mouth.style.borderBottom = "3px solid var(--matrix-green)";
+                  bearFace.style.transform = "translateY(0)";
+              }, 1000);
+            }, 800);
+          }, 300);
+        } else {
+          // Hata animasyonu: Ayı sallasın
+          const shakeDuration = 100;
+          bearFace.style.transition = "transform 0.1s ease";
+          bearFace.style.transform = "translateX(-5px)";
+          setTimeout(() => {
+            bearFace.style.transform = "translateX(5px)";
+            setTimeout(() => {
+              bearFace.style.transform = "translateX(-5px)";
+              setTimeout(() => {
+                bearFace.style.transform = "translateX(5px)";
+                setTimeout(() => {
+                  bearFace.style.transform = "translateX(0)";
+                  alert("Hata: Lütfen Tüm Alanları Doldurun!");
+                  submitButton.textContent = originalButtonText;
+                  submitButton.disabled = false;
+                }, shakeDuration);
+              }, shakeDuration);
+            }, shakeDuration);
+          }, shakeDuration);
+        }
+      });
+
+      // Input odaklanma animasyonu
+      const inputs = document.querySelectorAll("input");
+      inputs.forEach(input => {
+        input.addEventListener("focus", () => {
+          bearFace.style.transition = "transform 0.3s ease";
+          bearFace.style.transform = "translateY(-5px) scale(1.03)";
+        });
+        input.addEventListener("blur", () => {
+          bearFace.style.transition = "transform 0.3s ease";
+          bearFace.style.transform = "translateY(0) scale(1)";
+        });
+      });
+
+      // Matrix rain effect
+      function createMatrixRain() {
+        const characterSet = "01abcdefghijklmnoöprsştuüvyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+-=[]{}|;':\",./<>?`~ ";
+        const columns = Math.floor(matrixOverlay.offsetWidth / 12); // Her sütun 12px genişliğinde
+
+        for (let i = 0; i < columns; i++) {
+          const column = document.createElement('div');
+          column.className = 'code-column';
+          column.style.left = (i * 12) + 'px';
+          column.style.animationDuration = (3 + Math.random() * 7) + 's'; // 3-10 saniye arası
+
+          let columnContent = '';
+          const columnLength = 10 + Math.floor(Math.random() * 20); // 10-30 karakter
+
+          for (let j = 0; j < columnLength; j++) {
+            columnContent += characterSet.charAt(Math.floor(Math.random() * characterSet.length));
+          }
+          column.textContent = columnContent; // textContent kullan, <br> kullanma
+          matrixOverlay.appendChild(column);
+
+          // Her sütunu farklı bir başlangıç noktasına ayarla
+          column.style.animationDelay = `-${Math.random() * column.offsetHeight / (column.offsetHeight / parseFloat(column.style.animationDuration)) * 1000}ms`;
+        }
+      }
+
+      // Matrix effect'i DOM yüklendikten sonra başlat
+      createMatrixRain();
+
+      // Parmak izi giriş butonu (simülasyon)
+      fingerprintLoginBtn.addEventListener('click', function() {
+        this.style.transform = 'scale(0.9)'; // Basma efekti
+        setTimeout(() => {
+            this.style.transform = 'scale(1)';
+            alert('Biyometrik doğrulama başlatıldı. Lütfen parmağınızı sensöre koyun...');
+            // Gerçek bir uygulamada burada biyometrik API çağrılır
+        }, 200);
+      });
+    });
+  </script>
+</body>
+</html>
